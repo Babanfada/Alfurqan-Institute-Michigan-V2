@@ -1,0 +1,245 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "mysql"
+  url      = env("DATABASE_URL")
+}
+
+model banner {
+  banner_id       Int       @id @default(autoincrement())
+  title           String?   @db.VarChar(255)
+  description     String?   @db.Text
+  image           String?   @default("/uploads/example.jpeg") @db.VarChar(255)
+  image_public_id String?   @db.VarChar(255)
+  time            String?   @db.VarChar(100)
+  year            Int?
+  start_date      DateTime? @db.Date
+  end_date        DateTime? @db.Date
+  createdAt       DateTime? @default(now()) @db.Timestamp(0)
+  updatedAt       DateTime? @default(now()) @db.Timestamp(0)
+}
+
+model campaigns_aim {
+  campaign_id     Int                   @id @default(autoincrement())
+  title           String                @db.VarChar(255)
+  image_url       String                @default("/uploads/example.jpeg") @db.VarChar(500)
+  image_public_id String?               @db.VarChar(255)
+  description     String                @db.Text
+  donation_url    String                @default("https://donorbox.org/embed") @db.VarChar(500)
+  start_date      DateTime?             @default(now()) @db.DateTime(0)
+  end_date        DateTime?             @db.DateTime(0)
+  status          campaigns_aim_status? @default(active)
+  createdAt       DateTime?             @default(now()) @db.Timestamp(0)
+  updatedAt       DateTime?             @default(now()) @db.Timestamp(0)
+}
+
+model enquiries {
+  enq_id    Int               @id @default(autoincrement())
+  name      String            @db.VarChar(255)
+  email     String            @db.VarChar(255)
+  message   String            @db.Text
+  status    enquiries_status? @default(pending)
+  createdAt DateTime?         @default(now()) @db.Timestamp(0)
+  updatedAt DateTime?         @default(now()) @db.Timestamp(0)
+}
+
+model events {
+  event_id      Int            @id @default(autoincrement())
+  title         String         @db.VarChar(255)
+  image_url     String         @default("/uploads/example.jpeg") @db.VarChar(500)
+  description   String?        @db.Text
+  event_date    DateTime?      @db.DateTime(0)
+  location      String?        @db.VarChar(255)
+  organizer     String?        @db.VarChar(255)
+  contact_email String?        @db.VarChar(255)
+  contact_phone String?        @db.VarChar(20)
+  event_url     String         @default("https://donorbox.org/events") @db.VarChar(500)
+  status        events_status? @default(upcoming)
+  createdAt     DateTime?      @default(now()) @db.Timestamp(0)
+  updatedAt     DateTime?      @default(now()) @db.Timestamp(0)
+}
+
+model feedbackcomplaints {
+  feedback_id Int       @id @default(autoincrement())
+  user_id     Int?
+  subject     String    @db.VarChar(255)
+  notes       String    @db.Text
+  createdAt   DateTime? @default(now()) @db.Timestamp(0)
+  updatedAt   DateTime? @default(now()) @db.Timestamp(0)
+  users       users?    @relation(fields: [user_id], references: [user_id], onDelete: NoAction, onUpdate: NoAction, map: "feedbackcomplaints_ibfk_1")
+
+  @@index([user_id], map: "user_id")
+}
+
+model programme_reg {
+  reg_id           Int                            @id @default(autoincrement())
+  programme_id     Int
+  user_id          Int
+  programme        programme_reg_programme
+  category         programme_reg_category
+  discovery_method programme_reg_discovery_method
+  createdAt        DateTime?                      @default(now()) @db.Timestamp(0)
+  updatedAt        DateTime?                      @default(now()) @db.Timestamp(0)
+  programmes       programmes                     @relation(fields: [programme_id], references: [programme_id], onDelete: NoAction, onUpdate: NoAction, map: "programme_reg_ibfk_1")
+  users            users                          @relation(fields: [user_id], references: [user_id], onDelete: NoAction, onUpdate: NoAction, map: "programme_reg_ibfk_2")
+
+  @@index([programme_id], map: "programme_id")
+  @@index([user_id], map: "user_id")
+}
+
+model programmeoutcomes {
+  outcome_id   Int         @id @default(autoincrement())
+  programme_id Int?
+  outcome1     String?     @default("/uploads/example.jpeg") @db.VarChar(255)
+  outcome2     String?     @default("/uploads/example.jpeg") @db.VarChar(255)
+  outcome3     String?     @default("/uploads/example.jpeg") @db.VarChar(255)
+  createdAt    DateTime?   @default(now()) @db.Timestamp(0)
+  updatedAt    DateTime?   @default(now()) @db.Timestamp(0)
+  programmes   programmes? @relation(fields: [programme_id], references: [programme_id], onDelete: NoAction, onUpdate: NoAction, map: "programmeoutcomes_ibfk_1")
+
+  @@index([programme_id], map: "programme_id")
+}
+
+model programmes {
+  programme_id      Int                 @id @default(autoincrement())
+  title             String              @db.VarChar(255)
+  description       String              @db.Text
+  heading           String?             @db.VarChar(100)
+  about             String              @db.Text
+  time              String              @db.VarChar(100)
+  year              Int
+  start_date        DateTime            @db.Date
+  end_date          DateTime            @db.Date
+  createdAt         DateTime?           @default(now()) @db.Timestamp(0)
+  updatedAt         DateTime?           @default(now()) @db.Timestamp(0)
+  programme_reg     programme_reg[]
+  programmeoutcomes programmeoutcomes[]
+  programmesimages  programmesimages[]
+}
+
+model programmesimages {
+  img_id           Int         @id @default(autoincrement())
+  programme_id     Int?
+  image0           String?     @db.VarChar(255)
+  image0_public_id String?     @db.VarChar(255)
+  image1           String?     @db.VarChar(255)
+  image1_public_id String?     @db.VarChar(255)
+  image2           String?     @db.VarChar(255)
+  image2_public_id String?     @db.VarChar(255)
+  createdAt        DateTime?   @default(now()) @db.Timestamp(0)
+  updatedAt        DateTime?   @default(now()) @db.Timestamp(0)
+  programmes       programmes? @relation(fields: [programme_id], references: [programme_id], onDelete: NoAction, onUpdate: NoAction, map: "programmesimages_ibfk_1")
+
+  @@index([programme_id], map: "programme_id")
+}
+
+model quran_surahs {
+  surah_id        Int       @id @default(autoincrement())
+  surah           String?   @db.VarChar(255)
+  verse           Int?
+  text            String?   @db.Text
+  translation     String?   @db.Text
+  transliteration String?   @db.Text
+  createdAt       DateTime? @default(now()) @db.Timestamp(0)
+  updatedAt       DateTime? @default(now()) @db.Timestamp(0)
+}
+
+model token {
+  token_id     Int       @id @default(autoincrement())
+  refreshToken String    @db.VarChar(100)
+  ip           String    @db.VarChar(100)
+  userAgent    String?   @db.VarChar(500)
+  isValid      Boolean   @default(true)
+  user         Int?
+  createdAt    DateTime? @default(now()) @db.DateTime(0)
+  updatedAt    DateTime? @default(now()) @db.DateTime(0)
+  users        users?    @relation(fields: [user], references: [user_id], onDelete: Cascade, onUpdate: NoAction, map: "token_ibfk_1")
+
+  @@index([user], map: "user")
+}
+
+/// This table contains check constraints and requires additional setup for migrations. Visit https://pris.ly/d/check-constraints for more info.
+model users {
+  user_id                Int                  @id @default(autoincrement())
+  first_name             String               @db.VarChar(50)
+  last_name              String               @db.VarChar(50)
+  user_name              String?              @unique(map: "user_name") @db.VarChar(50)
+  email                  String               @unique(map: "email") @db.VarChar(255)
+  password               String               @db.VarChar(100)
+  role                   users_role?          @default(user)
+  phone                  String               @unique(map: "phone") @db.VarChar(30)
+  image                  String?              @db.Text
+  img_public_id          String?              @db.VarChar(255)
+  gender                 users_gender?        @default(female)
+  address                String               @default("please update your address") @db.VarChar(1000)
+  city                   String               @default("please update your city") @db.VarChar(50)
+  state                  String               @default("please update your state") @db.VarChar(50)
+  country                String               @default("please update your country") @db.VarChar(50)
+  notification           Boolean              @default(false)
+  blacklisted            Boolean              @default(false)
+  verificationString     String?              @db.Text
+  isVerified             Boolean              @default(false)
+  verified               DateTime?            @db.DateTime(0)
+  passwordToken          String?              @db.Text
+  passwordExpirationDate DateTime?            @db.DateTime(0)
+  createdAt              DateTime?            @default(now()) @db.DateTime(0)
+  updatedAt              DateTime?            @default(now()) @db.DateTime(0)
+  feedbackcomplaints     feedbackcomplaints[]
+  programme_reg          programme_reg[]
+  token                  token[]
+}
+
+enum programme_reg_programme {
+  Ta_afiz_Alquran         @map("Ta-afiz Alquran")
+  Arabic_Language_studies @map("Arabic Language studies")
+  Vocational_Training     @map("Vocational Training")
+  Islamic_studies         @map("Islamic studies")
+  Islamic_Conference      @map("Islamic Conference")
+  Free_Iftar_Meal         @map("Free Iftar Meal")
+}
+
+enum enquiries_status {
+  pending
+  resolved
+}
+
+enum programme_reg_category {
+  Youth
+  Adult
+}
+
+enum programme_reg_discovery_method {
+  Masjid
+  Social_Media   @map("Social Media")
+  Email_Campaign @map("Email Campaign")
+  Referral
+  Website
+  Event_Workshop @map("Event/Workshop")
+  Advertisement
+  Friends
+  Other
+}
+
+enum users_role {
+  admin
+  user
+}
+
+enum campaigns_aim_status {
+  active
+  completed
+  pending
+}
+
+enum events_status {
+  upcoming
+  ongoing
+  completed
+}
+
+enum users_gender {
+  male
+  female
+}
