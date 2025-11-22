@@ -6,10 +6,20 @@ import { FacebookStrategy } from './strategies/facebook.strategy';
 import { GoogleStrategy } from './strategies/google.strategy';
 import { GithubStrategy } from './strategies/github.strategy';
 import { PassportModule } from '@nestjs/passport';
+import { LocalStrategy } from './strategies/local.strategy';
+import { TwitterStrategy } from './strategies/twitter.strategy';
+
 
 @Module({
   imports: [MailModule, PassportModule.register({ session: false })], // Import MailModule if not global, // no passport sessions
   controllers: [AuthController],
-  providers: [AuthService, FacebookStrategy, GoogleStrategy, GithubStrategy],
+  providers: [
+    AuthService,
+    FacebookStrategy,
+    GoogleStrategy,
+    GithubStrategy,
+    LocalStrategy,
+    TwitterStrategy
+  ],
 })
 export class AuthModule {}

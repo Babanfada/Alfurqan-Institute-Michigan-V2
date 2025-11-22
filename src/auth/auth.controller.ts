@@ -23,30 +23,100 @@ import {
 import type { Request, Response } from 'express';
 import { JwtAuthGuard } from '../common/guards/jwt-auth.guard';
 import { GetUser } from './decorators/get-user.decorator';
+import { AuthGuard } from '@nestjs/passport';
 
 @Controller('api/v1/authentication')
 export class AuthController {
   constructor(private readonly authService: AuthService) {}
+  // Redirect to Google
+  @Get('google')
+  @UseGuards(AuthGuard('google'))
+  async googleAuth() {
+    // initiates the OAuth2 flow
+  }
 
+  // Google callback
+  @Get('google/callback')
+  @UseGuards(AuthGuard('google'))
+  async googleAuthRedirect(
+    @Req() req: Request,
+    @Res({ passthrough: true }) res: Response,
+  ) {
+    // req.user contains the object returned from GoogleStrategy.validate
+    const profile = req.user as any;
+    return this.authService.socialLogin(profile, req, res);
+  }
+
+  // Twitter
+  // STEP 1: Redirect user to Twitter OAuth page
+  @Get('twitter')
+  @UseGuards(AuthGuard('twitter'))
+  async twitterLogin() {
+    // Passport handles redirect
+  }
+
+  // STEP 2: Twitter sends user back to callback URL
+  @Get('twitter/callback')
+  @UseGuards(AuthGuard('twitter'))
+  async twitterCallback(@Req() req, @Res() res: Response) {
+    console.log(req.user);
+    const { profile } = req.user;
+    return this.authService.socialLogin(profile, req, res);
+  }
+
+  // GitHub
+  @Get('github')
+  @UseGuards(AuthGuard('github'))
+  githubAuth() {}
+
+  @Get('github/callback')
+  @UseGuards(AuthGuard('github'))
+  async githubAuthRedirect(
+    @Req() req: Request,
+    @Res({ passthrough: true }) res: Response,
+  ) {
+    //console.log(req.user);
+    const profile = req.user as any;
+    return this.authService.socialLogin(profile, req, res);
+  }
+
+  // Facebook
+  @Get('facebook')
+  @UseGuards(AuthGuard('facebook'))
+  facebookAuth() {}
+
+  @Get('facebook/callback')
+  @UseGuards(AuthGuard('facebook'))
+  async facebookAuthRedirect(
+    @Req() req: Request,
+    @Res({ passthrough: true }) res: Response,
+  ) {
+    const profile = req.user as any;
+    return this.authService.socialLogin(profile, req, res);
+  }
   /**
    * User login route
    * Accepts email and password from the request body
    * Collects user-agent and IP for session management
    */
+  @UseGuards(AuthGuard('local'))
   @Post('login')
-  login(
-    @Body() body: LoginDto,
-    @Req() req: Request,
-    @Res({ passthrough: true }) res: Response,
-  ) {
+  async login(@Req() req, @Res({ passthrough: true }) res: Response) {
+    // req.user comes from validate() in LocalStrategy
     const userAgent = req.headers['user-agent'] || '';
     const ip =
       (req.headers['x-forwarded-for'] as string) ||
       req.ip ||
       req.socket.remoteAddress;
-    return this.authService.login(body, userAgent, ip, req, res);
+    const { tokenUser, user } = req.user;
+    return this.authService.setTokensAndCookies({
+      user,
+      res,
+      ip,
+      userAgent,
+      tokenUser,
+    });
   }
-
   /**
    * Refresh access and refresh tokens using the refresh token cookie
    * This allows maintaining user session without requiring login again

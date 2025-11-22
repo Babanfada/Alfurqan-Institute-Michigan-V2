@@ -55,14 +55,12 @@ export class AuthService {
   async setTokensAndCookies({
     user,
     tokenUser,
-    req,
     res,
     ip,
     userAgent,
   }: {
     user: any;
     tokenUser: any;
-    req: Request;
     res: Response;
     ip: string;
     userAgent: any;
@@ -102,20 +100,45 @@ export class AuthService {
   }
 
   // Login (use argon2 verify before calling setTokensAndCookies)
-  async login(
-    body: LoginDto,
-    userAgent: string,
-    ip: any,
-    req: Request,
-    res: Response,
-  ) {
-    const { email, password } = body;
-    if (!email || !password)
-      throw new BadRequestException('Missing credentials');
 
-    const user = await this.prisma.users.findUnique({ where: { email } });
+  async validateUser(email: string, password: string) {
+    const user = await this.prisma.users.findUnique({
+      where: { email },
+      include: { socialaccount: true },
+    });
     if (!user) throw new UnauthorizedException('Invalid credentials');
+    // ⛔ BLOCK local login for pure-social users
+    if (user.socialaccount.length > 0) {
+      // They have a social account linked
+      // But did they ever set their own password?
+      // If not, reject local login
+      async function verifyAnyHash(
+        hashed: string,
+        password: string,
+      ): Promise<boolean> {
+        // Try Argon2 first
+        try {
+          const ok = await argon2.verify(hashed, password);
+          if (ok) return true;
+        } catch (_) {}
 
+        // Fallback to bcrypt
+        try {
+          const ok = await bcrypt.compare(password, hashed);
+          if (ok) return true;
+        } catch (_) {}
+
+        return false;
+      }
+      const isPasswordValid = await verifyAnyHash(user.password, password);
+
+      // Or simply: do not allow local login at all unless they manually reset password
+      if (!isPasswordValid) {
+        throw new UnauthorizedException(
+          'This account was created with social login. Please sign in with Google or reset your password.',
+        );
+      }
+    }
     let isPasswordCorrect = false;
     // Check the type of hash stored in DB
     if (user.password.startsWith('$2')) {
@@ -145,14 +168,10 @@ export class AuthService {
       gender: user.gender,
       emailNotification: user.notification,
     };
-    return this.setTokensAndCookies({
+    return {
       user,
       tokenUser,
-      req,
-      res,
-      ip,
-      userAgent,
-    });
+    };
   }
 
   // Refresh endpoint logic
@@ -204,6 +223,95 @@ export class AuthService {
 
     return { msg: 'new access token created', accessToken, tokenUser };
     // return { msg: tokenRec.users?.user_id };
+  }
+  // src/auth/auth.service.ts (add method)
+  async socialLogin(profile: any, req: Request, res: Response) {
+    const { provider, providerId, email, firstName, lastName } = profile;
+
+    // 1. Try find by providerId OR email
+    let user = await this.prisma.users.findFirst({
+      where: {
+        OR: [{ socialaccount: { some: { provider, providerId } } }, { email }],
+      },
+      include: { socialaccount: true },
+    });
+
+    // 2. If user exists but provider not linked -> link it
+    if (user && !user.socialaccount.some((sa) => sa.provider === provider)) {
+      await this.prisma.socialaccount.create({
+        data: {
+          provider,
+          providerId,
+          users: { connect: { user_id: user.user_id } }, // <-- FIXED
+        },
+      });
+    }
+
+    // 3. If no user -> create one + attach socialaccount
+    async function generateUniquePhone(prisma) {
+      while (true) {
+        const phone = '070' + Math.floor(10000000 + Math.random() * 90000000);
+
+        const exists = await prisma.users.findUnique({
+          where: { phone },
+        });
+
+        if (!exists) return phone;
+      }
+    }
+
+    if (!user) {
+      const phone = await generateUniquePhone(this.prisma);
+      const hashedPassword = await argon2.hash(
+        crypto.randomBytes(16).toString('hex'),
+      );
+      user = await this.prisma.users.create({
+        data: {
+          first_name: firstName ?? '',
+          last_name: lastName ?? '',
+          email,
+          isVerified: true,
+          verified: new Date(),
+          role: 'user',
+          password: hashedPassword,
+          phone,
+          socialaccount: {
+            // <-- FIXED
+            create: [
+              {
+                provider,
+                providerId,
+              },
+            ],
+          },
+        },
+        include: { socialaccount: true },
+      });
+    }
+
+    // SAFETY GUARD
+    if (!user) throw new Error('User creation failed');
+
+    // 4. Build token payload
+    const tokenUser = {
+      user_id: user.user_id,
+      firsttName: user.first_name,
+      email: user.email,
+      role: user.role,
+      address: user.address,
+      image: user.image,
+      phone: user.phone,
+      gender: user.gender,
+      emailNotification: user.notification,
+    };
+    // 5. Issue tokens
+    return this.setTokensAndCookies({
+      user,
+      tokenUser,
+      res,
+      ip: req.ip ?? '', // <-- FIXED
+      userAgent: req.headers['user-agent'] ?? '',
+    });
   }
 
   async register(body: RegisterDto) {

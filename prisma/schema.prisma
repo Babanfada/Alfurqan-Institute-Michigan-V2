@@ -188,7 +188,20 @@ model users {
   updatedAt              DateTime?            @default(now()) @db.DateTime(0)
   feedbackcomplaints     feedbackcomplaints[]
   programme_reg          programme_reg[]
+  socialaccount          socialaccount[]
   token                  token[]
+}
+
+model socialaccount {
+  id         Int       @id @default(autoincrement())
+  provider   String    @db.VarChar(255)
+  providerId String    @db.VarChar(255)
+  userId     Int
+  createdAt  DateTime? @default(now()) @db.DateTime(0)
+  users      users     @relation(fields: [userId], references: [user_id], onDelete: Cascade, onUpdate: NoAction, map: "fk_user")
+
+  @@unique([provider, providerId], map: "unique_provider_providerId")
+  @@index([userId], map: "fk_user")
 }
 
 enum programme_reg_programme {
