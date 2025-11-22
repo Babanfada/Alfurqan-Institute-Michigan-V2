@@ -18,6 +18,9 @@ import { JwtAuthGuard } from 'src/common/guards/jwt-auth.guard';
 import { RolesGuard } from 'src/common/guards/roles.guard';
 import { Roles } from 'src/common/decorators/roles.decorators';
 import { FileInterceptor } from '@nestjs/platform-express';
+import { diskStorage } from 'multer';
+import { UploadConfig } from 'src/utils/cloudinary.config';
+
 @Controller('api/v1/banners')
 export class BannersController {
   constructor(private bannerService: BannerService) {}
@@ -56,8 +59,10 @@ export class BannersController {
     );
   }
   // upload banner image
-  @Post(':banner_id/upload')
-  @UseInterceptors(FileInterceptor('image'))
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles('admin')
+  @Patch(':banner_id/upload')
+  @UseInterceptors(FileInterceptor('image', UploadConfig))
   uploadImage(
     @Param('banner_id', ParseIntPipe) bannerId: number,
     @UploadedFile() file: Express.Multer.File,

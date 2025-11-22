@@ -72,6 +72,7 @@ export class BannerService {
 
   //upload banner image
   async uploadBannerImg(bannerId: number, file: Express.Multer.File) {
+    //console.log(file);
     if (!file) throw new BadRequestException('Please upload an image');
 
     if (!file.mimetype.startsWith('image')) {
