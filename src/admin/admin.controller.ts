@@ -4,7 +4,7 @@ import { Roles } from 'src/common/decorators/roles.decorators';
 import { JwtAuthGuard } from 'src/common/guards/jwt-auth.guard';
 import { RolesGuard } from 'src/common/guards/roles.guard';
 
-@Controller('api/v1/admin')
+@Controller('api/v2/admin')
 export class AdminController {
   constructor(private adminService: AdminService) {}
 
