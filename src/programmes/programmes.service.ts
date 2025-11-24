@@ -238,7 +238,17 @@ export class ProgrammesService {
       currentCount: programmes.length,
     };
   }
-
+  //get programmes title only
+  async getAllProgrammesTitle() {
+    const programmes = await this.prisma.programmes.findMany({
+      select: {
+        title: true,
+      },
+    });
+    return {
+      programmes,
+    };
+  }
   // Get single programme by ID
   async getSingleProgramme(programmeId: number) {
     const programme = await this.prisma.programmes.findUnique({

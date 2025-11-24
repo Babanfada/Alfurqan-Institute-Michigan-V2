@@ -83,6 +83,11 @@ export class ProgrammesController {
   getAllProgrammes(@Query() query: any) {
     return this.programmesService.getAllProgrammes(query);
   }
+  // get all programmes Title
+  @Get('title')
+  getAllProgrammesTitle() {
+    return this.programmesService.getAllProgrammesTitle();
+  }
   // get single programme
   @Get(':programme_id')
   getSingleProgramme(@Param('programme_id', ParseIntPipe) programmeId: number) {

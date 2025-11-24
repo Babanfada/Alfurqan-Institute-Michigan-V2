@@ -78,7 +78,7 @@ model programme_reg {
   reg_id           Int                            @id @default(autoincrement())
   programme_id     Int
   user_id          Int
-  programme        programme_reg_programme
+  programme        String?                        @db.VarChar(255)
   category         programme_reg_category
   discovery_method programme_reg_discovery_method
   createdAt        DateTime?                      @default(now()) @db.Timestamp(0)
@@ -203,15 +203,6 @@ model socialaccount {
 
   @@unique([provider, providerId], map: "unique_provider_providerId")
   @@index([userId], map: "fk_user")
-}
-
-enum programme_reg_programme {
-  Ta_afiz_Alquran         @map("Ta-afiz Alquran")
-  Arabic_Language_studies @map("Arabic Language studies")
-  Vocational_Training     @map("Vocational Training")
-  Islamic_studies         @map("Islamic studies")
-  Islamic_Conference      @map("Islamic Conference")
-  Free_Iftar_Meal         @map("Free Iftar Meal")
 }
 
 enum enquiries_status {
