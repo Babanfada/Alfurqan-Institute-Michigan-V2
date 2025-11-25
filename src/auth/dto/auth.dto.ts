@@ -6,11 +6,7 @@ import {
   IsString,
   MinLength,
 } from 'class-validator';
-export enum GenderEnum {
-  MALE = 'male',
-  FEMALE = 'female',
-}
-
+import { users_gender } from '@prisma/client';
 export class LoginDto {
   @IsEmail()
   @IsNotEmpty()
@@ -42,8 +38,8 @@ export class RegisterDto {
   phone: string;
 
   @IsNotEmpty()
-  @IsEnum(GenderEnum, { message: 'Gender must be either male or female' })
-  gender: GenderEnum;
+  @IsEnum(users_gender, { message: 'Gender must be either male or female' })
+  gender: users_gender;
 
   @IsNotEmpty()
   @IsString()

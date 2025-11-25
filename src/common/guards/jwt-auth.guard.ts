@@ -27,7 +27,10 @@ export class JwtAuthGuard implements CanActivate {
       token = cookies?.accessToken;
     }
 
-    if (!token) throw new UnauthorizedException('No access token');
+    if (!token)
+      throw new UnauthorizedException(
+        'No access token or expired, pls refresh or re-login entirely ',
+      );
 
     try {
       const payload = this.jwtService.verify(token, {
