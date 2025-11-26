@@ -187,6 +187,9 @@ export class RegisterationsService {
         'Not authorized to delete this registration',
       );
     }
+    await this.prisma.programme_reg.delete({
+      where: { reg_id: regId },
+    });
     return { msg: `Registeration with id ${regId} deleted successfully` };
   }
 }
