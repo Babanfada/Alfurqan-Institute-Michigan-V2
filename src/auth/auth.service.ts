@@ -369,14 +369,14 @@ export class AuthService {
     //   process.env.FRONTEND_URL ||
     //   'https://alfurqaninstitute.onrender.com/api/v1';
     const origin = 'http://localhost:3001';
-    await this.mailservice.sendVerificationEmail({
-      email: user.email,
-      token: user.verificationString,
-      firstName: user.first_name,
-      lastName: user.last_name,
-      origin,
-      // origin: this.configService.get('APP_ORIGIN'),
-    });
+    // await this.mailservice.sendVerificationEmail({
+    //   email: user.email,
+    //   token: user.verificationString,
+    //   firstName: user.first_name,
+    //   lastName: user.last_name,
+    //   origin,
+    //   // origin: this.configService.get('APP_ORIGIN'),
+    // });
 
     return {
       msg: 'Please check your email to complete your registration',
@@ -449,13 +449,13 @@ export class AuthService {
     //   process.env.FRONTEND_URL ||
     //   'https://alfurqaninstitute.onrender.com/api/v1';
     const origin = 'http://localhost:3001';
-    await this.mailservice.sendPasswordResetEmail({
-      email,
-      token,
-      firstName: user.first_name,
-      lastName: user.last_name,
-      origin,
-    });
+    // await this.mailservice.sendPasswordResetEmail({
+    //   email,
+    //   token,
+    //   firstName: user.first_name,
+    //   lastName: user.last_name,
+    //   origin,
+    // });
 
     return { msg: 'Password reset link sent to email', token };
   }
